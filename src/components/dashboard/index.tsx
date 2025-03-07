@@ -24,51 +24,50 @@ export default function Dashboard() {
   const [progressData, setProgressData] = useState<Record<string, number>>({});
   const { user } = useAuth();
 
-  useEffect(() => {
-    const fetchChallenges = async () => {
-      if (!user?.id) return;
-      console.log("Fetching challenges...");
-      if (!user) return;
+  const fetchChallenges = async () => {
+    if (!user?.id) return;
+    console.log("Fetching challenges...");
 
-      // Get challenges for the current user
-      const { data, error } = await supabase.rpc("get_challenges_for_user", {
-        user_id: user.id,
+    // Get challenges for the current user
+    const { data, error } = await supabase.rpc("get_challenges_for_user", {
+      user_id: user.id,
+    });
+
+    console.log("User ID:", user.id);
+    console.log("Query error:", error);
+
+    console.log("Fetched challenges:", data);
+    if (data) setChallenges(data);
+
+    // Fetch progress data for each challenge
+    if (data && data.length > 0) {
+      const progressPromises = data.map(async (challenge) => {
+        const { data: logs } = await supabase
+          .from("progress_logs")
+          .select("*")
+          .eq("challenge_id", challenge.id)
+          .eq("user_id", user.id);
+
+        return {
+          challengeId: challenge.id,
+          completedDays: logs ? new Set(logs.map((log) => log.date)).size : 0,
+        };
       });
 
-      console.log("User ID:", user.id);
-      console.log("Query error:", error);
+      const progressResults = await Promise.all(progressPromises);
+      const progressMap = progressResults.reduce(
+        (acc, { challengeId, completedDays }) => {
+          acc[challengeId] = completedDays;
+          return acc;
+        },
+        {} as Record<string, number>,
+      );
 
-      console.log("Fetched challenges:", data);
-      if (data) setChallenges(data);
+      setProgressData(progressMap);
+    }
+  };
 
-      // Fetch progress data for each challenge
-      if (data && data.length > 0) {
-        const progressPromises = data.map(async (challenge) => {
-          const { data: logs } = await supabase
-            .from("progress_logs")
-            .select("*")
-            .eq("challenge_id", challenge.id)
-            .eq("user_id", user.id);
-
-          return {
-            challengeId: challenge.id,
-            completedDays: logs ? new Set(logs.map((log) => log.date)).size : 0,
-          };
-        });
-
-        const progressResults = await Promise.all(progressPromises);
-        const progressMap = progressResults.reduce(
-          (acc, { challengeId, completedDays }) => {
-            acc[challengeId] = completedDays;
-            return acc;
-          },
-          {} as Record<string, number>,
-        );
-
-        setProgressData(progressMap);
-      }
-    };
-
+  useEffect(() => {
     fetchChallenges();
   }, [user]);
 

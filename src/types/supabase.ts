@@ -110,7 +110,7 @@ export type Database = {
           date: string
           id: string
           user_id: string
-          value: number
+          value: string
         }
         Insert: {
           challenge_id: string
@@ -118,7 +118,7 @@ export type Database = {
           date: string
           id?: string
           user_id: string
-          value: number
+          value: string
         }
         Update: {
           challenge_id?: string
@@ -126,7 +126,7 @@ export type Database = {
           date?: string
           id?: string
           user_id?: string
-          value?: number
+          value?: string
         }
         Relationships: [
           {
@@ -137,6 +137,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_profiles: {
+        Row: {
+          created_at: string | null
+          display_name: string | null
+          id: string
+          joined_date: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          display_name?: string | null
+          id: string
+          joined_date?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string | null
+          id?: string
+          joined_date?: string | null
+        }
+        Relationships: []
       }
     }
     Views: {

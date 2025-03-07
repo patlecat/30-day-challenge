@@ -26,6 +26,8 @@ export default function Dashboard() {
 
   useEffect(() => {
     const fetchChallenges = async () => {
+      if (!user?.id) return;
+      console.log("Fetching challenges...");
       if (!user) return;
 
       // Get challenges for the current user
@@ -113,35 +115,40 @@ export default function Dashboard() {
           const progressPercentage = (completedDays / 30) * 100;
 
           return (
-            <Link key={challenge.id} to={`/progress/${challenge.id}`}>
-              <Card className="hover:bg-muted/50 transition-colors h-full">
-                <CardHeader>
-                  <CardTitle>{challenge.title}</CardTitle>
-                  {challenge.description && (
-                    <CardDescription className="line-clamp-2">
-                      {challenge.description}
-                    </CardDescription>
-                  )}
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span>Progress</span>
-                      <span>{completedDays}/30 days</span>
-                    </div>
-                    <Progress value={progressPercentage} className="mb-2" />
+            <Card
+              key={challenge.id}
+              className="hover:bg-muted/50 transition-colors h-full relative"
+            >
+              <Link
+                to={`/progress/${challenge.id}`}
+                className="absolute inset-0 z-0"
+              />
+              <CardHeader>
+                <CardTitle>{challenge.title}</CardTitle>
+                {challenge.description && (
+                  <CardDescription className="line-clamp-2">
+                    {challenge.description}
+                  </CardDescription>
+                )}
+              </CardHeader>
+              <CardContent>
+                <div className="mb-4">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span>Progress</span>
+                    <span>{completedDays}/30 days</span>
                   </div>
+                  <Progress value={progressPercentage} className="mb-2" />
+                </div>
 
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Remaining
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">
-                          {remainingDays} days
-                        </span>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Remaining
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{remainingDays} days</span>
+                      <div className="relative z-10">
                         <AddProgressDialog
                           challenge={challenge}
                           userId={user?.id || ""}
@@ -149,24 +156,24 @@ export default function Dashboard() {
                         />
                       </div>
                     </div>
-
-                    <div className="flex justify-between">
-                      <span>Daily Goal</span>
-                      <span className="font-medium">
-                        {formatGoalDisplay(challenge)}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center mt-4 text-muted-foreground">
-                      <Users className="h-4 w-4 mr-2" />
-                      <span>5 participants</span>
-                      <Trophy className="h-4 w-4 ml-4 mr-2" />
-                      <span>2nd place</span>
-                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            </Link>
+
+                  <div className="flex justify-between">
+                    <span>Daily Goal</span>
+                    <span className="font-medium">
+                      {formatGoalDisplay(challenge)}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center mt-4 text-muted-foreground">
+                    <Users className="h-4 w-4 mr-2" />
+                    <span>5 participants</span>
+                    <Trophy className="h-4 w-4 ml-4 mr-2" />
+                    <span>2nd place</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           );
         })}
 

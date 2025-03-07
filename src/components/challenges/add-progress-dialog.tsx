@@ -35,13 +35,25 @@ export function AddProgressDialog({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { error } = await supabase.from("progress_logs").insert({
+      console.log("Submitting progress:", {
         challenge_id: challenge.id,
         user_id: userId,
         date: new Date().toISOString().split("T")[0],
-        value: Number(value),
+        value: value,
         notes,
       });
+      const { data, error } = await supabase
+        .from("progress_logs")
+        .insert({
+          challenge_id: challenge.id,
+          user_id: userId,
+          date: new Date().toISOString().split("T")[0],
+          value: value || "0",
+          notes: notes || "",
+        })
+        .select();
+
+      console.log("Insert response:", { data, error });
 
       if (error) throw error;
 
@@ -147,6 +159,18 @@ export function AddProgressDialog({
               value={value}
               onChange={(e) => setValue(e.target.value)}
               required
+            />
+          </div>
+        );
+      case "prose":
+        return (
+          <div className="space-y-2">
+            <Label>Today's Writing</Label>
+            <Textarea
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              required
+              className="min-h-[200px]"
             />
           </div>
         );

@@ -32,30 +32,60 @@ export function AddProgressDialog({
   const [value, setValue] = useState("");
   const { toast } = useToast();
 
+  const validateAndFormatValue = (value: string, type: string): string => {
+    if (!value) throw new Error("Value is required");
+
+    switch (type) {
+      case "time": {
+        const [hours = "0", minutes = "0", seconds = "0"] = value.split(":");
+        const h = hours.padStart(2, "0");
+        const m = minutes.padStart(2, "0");
+        const s = seconds.padStart(2, "0");
+        if (isNaN(Number(h)) || isNaN(Number(m)) || isNaN(Number(s))) {
+          throw new Error("Invalid time format");
+        }
+        return `${h}:${m}:${s}`;
+      }
+      case "distance": {
+        const [_, unit] = challenge.daily_goal.split("|");
+        const numValue = Number(value);
+        if (isNaN(numValue)) throw new Error("Invalid distance value");
+        return `${numValue}|${unit}`;
+      }
+      case "quantity": {
+        const numValue = Number(value);
+        if (isNaN(numValue)) throw new Error("Invalid quantity value");
+        return numValue.toString();
+      }
+      case "prose": {
+        if (!value.trim()) throw new Error("Prose content cannot be empty");
+        return value.trim();
+      }
+      default:
+        throw new Error("Invalid challenge type");
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      console.log("Submitting progress:", {
-        challenge_id: challenge.id,
-        user_id: userId,
-        date: new Date().toISOString().split("T")[0],
-        value: value,
-        notes,
-      });
+      const formattedValue = validateAndFormatValue(value, challenge.type);
+
       const { data, error } = await supabase
         .from("progress_logs")
         .insert({
           challenge_id: challenge.id,
           user_id: userId,
           date: new Date().toISOString().split("T")[0],
-          value: value || "0",
-          notes: notes || "",
+          value: formattedValue,
+          notes: notes?.trim() || "",
         })
         .select();
 
-      console.log("Insert response:", { data, error });
-
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw new Error(error.message);
+      }
 
       toast({
         title: "Success",
@@ -65,11 +95,12 @@ export function AddProgressDialog({
       setOpen(false);
       setNotes("");
       setValue("");
-    } catch (error) {
+    } catch (error: any) {
+      console.error("Error logging progress:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to log progress",
+        description: error?.message || "Failed to log progress",
       });
     }
   };
